@@ -4,6 +4,7 @@ import {
   Alert,
   Button,
   Col,
+  Dropdown,
   Form,
   Modal,
   Pagination,
@@ -20,8 +21,17 @@ import {
 } from "./service/categoryservice";
 import { Category } from "../models/category";
 import { PaginationModel } from "../models/pagination";
-
-export default function Categories() {
+import Image from "next/image";
+import sortimg from "./../../public/sortimg.png";
+import { useSession } from "next-auth/react";
+import { redirect } from "next/navigation";
+function Categories() {
+  const { data: session} = useSession({
+    required: true,
+    onUnauthenticated() {
+      redirect("/api/auth/signin?callbackUrl=/categories");
+    },
+  });
   const [categories, setCategoires] = useState([]);
   const [show, setShow] = useState(false);
   const [id, setId] = useState(0);
@@ -37,41 +47,38 @@ export default function Categories() {
   const [sortBy, setSortBy] = useState("name");
   const [loaded, setLoaded] = useState(false);
   const [added, setAdded] = useState(false);
+  const [totalPages, setTotalPages] = useState(0);
+  const [active, setActive] = useState(1);
+  const [pageSize, setPageSize] = useState(5);
+  const [validated, setValidated] = useState(false);
   const handleClose = () => {
     setShow(false);
     ResetForm();
     setAdded(false);
+    setValidated(false);
   };
   const handleShow = () => setShow(true);
   useEffect(() => {
-    GetCategories(pageNumber, search, sortBy).then((res: Response) => {
-      if (res.ok) {
-        setLoaded(true);
-        let paginationData: PaginationModel = JSON.parse(
-          res.headers.get("X-Pagination")
-        );
-        setHasNext(paginationData.HasNext);
-        setHasPrevious(paginationData.HasPrevious);
-        res.json().then(setCategoires);
-      }
-    });
+    if (session?.user)
+      GetCategories(pageNumber, search, sortBy, pageSize, session).then(
+        (res: Response) => {
+          if (res.ok) {
+            setLoaded(true);
+            let paginationData: PaginationModel = JSON.parse(
+              res.headers.get("X-Pagination")
+            );
+            setHasNext(paginationData.HasNext);
+            setHasPrevious(paginationData.HasPrevious);
+            setTotalPages(paginationData.TotalPages);
+            setActive(pageNumber);
+            res.json().then(setCategoires);
+          }
+        }
+      );
     setChanged(false);
-  }, [changed, pageNumber, search, sortBy]);
-  const AddCategory = () => {
-    PostCategory(name).then((res) => {
-      if (res.ok) {
-        setAdded(true);
-        setChanged(true);
-        handleClose();
-        setMsg("Category created successfully!");
-        setShowAlert(true);
-      } else {
-        alert("Error occurred while adding!");
-      }
-    });
-  };
+  }, [changed, pageNumber, search, sortBy, pageSize,session]);
   const DeleteCategoryOnClick = (e: any) => {
-    DeleteCategory(e.target.name).then((res) => {
+    DeleteCategory(e.target.name,session).then((res) => {
       if (res.ok) {
         setChanged(true);
         setMsg("Category deleted successfully!");
@@ -87,23 +94,10 @@ export default function Categories() {
   };
   const GetCategoryOnClick = (e: any) => {
     let id = e.target.name;
-    GetCategory(id).then((category: Category) => {
+    GetCategory(id,session).then((category: Category) => {
       setUpdating(true);
       setName(category.name);
       setId(category.id);
-    });
-  };
-  const UpdateCategoryOnClick = () => {
-    UpdateCategory({ id, name }).then((res) => {
-      if (res.ok) {
-        setChanged(true);
-        ResetForm();
-        setUpdating(false);
-        setMsg("Category updated successfully!");
-        setShowAlert(true);
-      } else {
-        alert("Error occurred while updating!");
-      }
     });
   };
   const handleCancel = () => {
@@ -113,6 +107,64 @@ export default function Categories() {
   const SortCategories = () => {
     let sort = sortBy === "name_desc" ? "name" : "name_desc";
     setSortBy(sort);
+  };
+  let items = [];
+  for (let number = 1; number <= totalPages; number++) {
+    items.push(
+      <Pagination.Item
+        key={number}
+        active={active === number}
+        onClick={() => {
+          setPageNumber(number);
+        }}
+      >
+        {number}
+      </Pagination.Item>
+    );
+  }
+  const handleUpdate = (event: any) => {
+    const form = event.currentTarget;
+    if (form.checkValidity() === false) {
+      event.preventDefault();
+      event.stopPropagation();
+    } else {
+      event.preventDefault();
+      event.stopPropagation();
+      UpdateCategory({ id, name },session).then((res) => {
+        if (res.ok) {
+          setChanged(true);
+          ResetForm();
+          setUpdating(false);
+          setMsg("Category updated successfully!");
+          setShowAlert(true);
+        } else {
+          alert("Error occurred while updating!");
+        }
+      });
+    }
+    setValidated(true);
+  };
+  const handleSubmit = (event: any) => {
+    const form = event.currentTarget;
+    if (form.checkValidity() === false) {
+      event.preventDefault();
+      event.stopPropagation();
+    } else {
+      event.preventDefault();
+      event.stopPropagation();
+      PostCategory(name,session).then((res) => {
+        if (res.ok) {
+          setAdded(true);
+          setChanged(true);
+          handleClose();
+          setMsg("Category created successfully!");
+          setShowAlert(true);
+        } else {
+          alert("Error occurred while adding!");
+        }
+      });
+    }
+    setValidated(true);
   };
   if (!loaded) {
     return (
@@ -136,13 +188,13 @@ export default function Categories() {
       </Alert>
       <h2>Categories</h2>
       <hr />
-      <Row className="justify-content-beetwen">
-        <Col>
+      <Row className="justify-content-between">
+        <Col className="col-auto">
           <Button variant="primary" onClick={handleShow}>
             Add new
           </Button>
         </Col>
-        <Col lg={2} md>
+        <Col className="col-auto">
           <Form>
             <Form.Control
               type="text"
@@ -153,56 +205,82 @@ export default function Categories() {
           </Form>
         </Col>
       </Row>
+      <div className="float-end mt-2 mb-2">
+        <Dropdown>
+          <Dropdown.Toggle variant="info" size="sm" id="dropdown-basic">
+            Page size
+          </Dropdown.Toggle>
+          <Dropdown.Menu>
+            <Dropdown.Item onClick={() => setPageSize(5)}>5</Dropdown.Item>
+            <Dropdown.Item onClick={() => setPageSize(10)}>10</Dropdown.Item>
+            <Dropdown.Item onClick={() => setPageSize(15)}>15</Dropdown.Item>
+          </Dropdown.Menu>
+        </Dropdown>
+      </div>
       <Modal show={show} onHide={handleClose}>
         <Modal.Header closeButton>
           <Modal.Title>Add new category</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          <Form>
-            <Form.Label>Name</Form.Label>
-            <Form.Control
-              type="text"
-              placeholder="Name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-            />
+          <Form noValidate validated={validated} onSubmit={handleSubmit}>
+            <Form.Group controlId="validationCustom">
+              <Form.Label>Name</Form.Label>
+              <Form.Control
+                type="text"
+                placeholder="Name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                required
+              />
+              <Form.Control.Feedback type="invalid">
+                Please provide a valid name.
+              </Form.Control.Feedback>
+            </Form.Group>
+            <div className="float-end mt-2">
+              <Button
+                variant="secondary"
+                onClick={handleClose}
+                className="me-1"
+              >
+                Close
+              </Button>
+              {!added ? (
+                <Button variant="success" type="submit">
+                  Save
+                </Button>
+              ) : null}
+              {added ? (
+                <Button variant="primary" disabled>
+                  <Spinner
+                    as="span"
+                    animation="grow"
+                    size="sm"
+                    role="status"
+                    aria-hidden="true"
+                  />
+                  Saving...
+                </Button>
+              ) : null}
+            </div>
           </Form>
         </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={handleClose}>
-            Close
-          </Button>
-          {!added ? (
-            <Button variant="success" onClick={AddCategory}>
-              Save
-            </Button>
-          ) : null}
-          {added ? (
-            <Button variant="primary" disabled>
-              <Spinner
-                as="span"
-                animation="grow"
-                size="sm"
-                role="status"
-                aria-hidden="true"
-              />
-              Saving...
-            </Button>
-          ) : null}
-        </Modal.Footer>
+        <Modal.Footer></Modal.Footer>
       </Modal>
       <Table size="sm" bordered className="mt-2">
-        <thead className="table-success">
+        <thead className="table-info">
           <tr>
             <th>Id</th>
             <th>
               Name
-              <img
+              <Image
                 onClick={SortCategories}
-                style={{ height: "15px", textAlign: "right" }}
+                style={{ textAlign: "right" }}
                 className="float-end mt-1"
-                src="https://static-00.iconduck.com/assets.00/sort-icon-512x410-1kpy040x.png"
-              ></img>
+                src={sortimg}
+                alt="sort button"
+                width={18}
+                height={15}
+              />
             </th>
             <th colSpan={2}>Actions</th>
           </tr>
@@ -213,17 +291,15 @@ export default function Categories() {
               <tr key={category.id}>
                 <td>{category.id}</td>
                 <td>{category.name}</td>
-                <td>
+                <td className="col-lg-3 col-sm-auto text-center">
                   <Button
                     variant="warning"
-                    size="sm"
                     name={category.id.toString()}
                     onClick={GetCategoryOnClick}
                   >
                     Update
                   </Button>
                   <Button
-                    size="sm"
                     variant="danger"
                     className="mx-2"
                     name={category.id.toString()}
@@ -238,47 +314,58 @@ export default function Categories() {
         </tbody>
       </Table>
       <Pagination>
+        <Pagination.First onClick={() => setPageNumber(1)} />
         <Pagination.Prev
-          onClick={() => setPageNumber(pageNumber - 1)}
           disabled={!hasPrevious}
+          onClick={() => setPageNumber(pageNumber - 1)}
         />
+        {items}
         <Pagination.Next
-          onClick={() => setPageNumber(pageNumber + 1)}
           disabled={!hasNext}
+          onClick={() => setPageNumber(pageNumber + 1)}
         />
+        <Pagination.Last onClick={() => setPageNumber(totalPages)} />
       </Pagination>
       <div style={updating ? { display: "block" } : { display: "none" }}>
-        <Row className="justify-content-center">
-          <Form.Control type="number" value={id} hidden />
-          <Col md={3}>
-            <Form className="row justify-content-center">
-              <Form.Label>Name</Form.Label>
-              <Form.Control
-                type="text"
-                placeholder="Name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-              />
-            </Form>
-          </Col>
-        </Row>
-        <Row className="justify-content-center">
-          <Button
-            variant="success"
-            onClick={UpdateCategoryOnClick}
-            className="col-auto mt-3"
-          >
-            Save
-          </Button>
-          <Button
-            variant="secondary"
-            className="col-auto mt-3 mx-2"
-            onClick={handleCancel}
-          >
-            Cancel
-          </Button>
-        </Row>
+        <Form
+          className="row justify-content-center"
+          noValidate
+          validated={validated}
+          onSubmit={handleUpdate}
+        >
+          <Row className="justify-content-center">
+            <Form.Control type="number" value={id} hidden readOnly/>
+            <Col md={3}>
+              <Form.Group controlId="validationCustom">
+                <Form.Label>Name</Form.Label>
+                <Form.Control
+                  type="text"
+                  placeholder="Name"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  required
+                />
+                <Form.Control.Feedback type="invalid">
+                  Please provide a valid name.
+                </Form.Control.Feedback>
+              </Form.Group>
+            </Col>
+          </Row>
+          <Row className="justify-content-center">
+            <Button variant="success" type="submit" className="col-auto mt-3">
+              Save
+            </Button>
+            <Button
+              variant="secondary"
+              className="col-auto mt-3 mx-2"
+              onClick={handleCancel}
+            >
+              Cancel
+            </Button>
+          </Row>
+        </Form>
       </div>
     </>
   );
 }
+export default Categories;
