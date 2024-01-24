@@ -3,7 +3,7 @@ import React, { SyntheticEvent, useEffect, useState } from "react";
 import { GetClient, UpdateClient } from "../../service/clientservice";
 import { ClientEntity } from "@/app/models/client";
 import { Form, Button, Alert } from "react-bootstrap";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 const Edit = ({ params }: { params: { id: string } }) => {
   const [name, setName] = useState("");
@@ -11,9 +11,9 @@ const Edit = ({ params }: { params: { id: string } }) => {
   const [city, setCity] = useState("");
   const [postalCode, setPostalCode] = useState("");
   const [country, setCountry] = useState("");
-  const [id,setId] = useState(0);
+  const [id, setId] = useState(0);
   useEffect(() => {
-    GetClient(+params.id,session).then((client: ClientEntity) => {
+    GetClient(+params.id, session).then((client: ClientEntity) => {
       setId(client.id);
       setName(client.name);
       setAdress(client.adress);
@@ -34,23 +34,24 @@ const Edit = ({ params }: { params: { id: string } }) => {
     } else {
       event.preventDefault();
       event.stopPropagation();
-      UpdateClient({ id, name, adress, city, postalCode, country },session).then(
-        (res) => {
-          if (res.ok) {
-            setMsg("Client updated successfully!");
-            setShowAlert(true);
-            setTimeout(() => {
-              router.push("/clients");
-            }, 1000);
-          } else {
-            alert("Error occurred!");
-          }
+      UpdateClient(
+        { id, name, adress, city, postalCode, country },
+        session
+      ).then((res) => {
+        if (res.ok) {
+          setMsg("Client updated successfully!");
+          setShowAlert(true);
+          setTimeout(() => {
+            router.push("/clients");
+          }, 1000);
+        } else {
+          alert("Error occurred!");
         }
-      );
+      });
     }
     setValidated(true);
   };
-  const {data:session} = useSession();
+  const { data: session } = useSession();
   return (
     <div>
       <Alert
