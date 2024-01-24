@@ -74,7 +74,7 @@ function Categories() {
             res.json().then(setCategoires);
           }
         }
-      );
+      ).catch((err) => console.log(err));;
     setChanged(false);
   }, [changed, pageNumber, search, sortBy, pageSize,session]);
   const DeleteCategoryOnClick = (e: any) => {
@@ -86,7 +86,7 @@ function Categories() {
       } else {
         alert("Error occurrd while deleting!");
       }
-    });
+    }).catch((err) => console.log(err));;
   };
   const ResetForm = () => {
     setName("");
@@ -98,7 +98,7 @@ function Categories() {
       setUpdating(true);
       setName(category.name);
       setId(category.id);
-    });
+    }).catch((err) => console.log(err));;
   };
   const handleCancel = () => {
     ResetForm();
@@ -140,7 +140,7 @@ function Categories() {
         } else {
           alert("Error occurred while updating!");
         }
-      });
+      }).catch((err) => console.log(err));
     }
     setValidated(true);
   };
@@ -162,7 +162,7 @@ function Categories() {
         } else {
           alert("Error occurred while adding!");
         }
-      });
+      }).catch((err) => console.log(err));;
     }
     setValidated(true);
   };

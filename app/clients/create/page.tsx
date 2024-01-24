@@ -36,7 +36,7 @@ const Create = () => {
             alert("Error occurred!");
           }
         }
-      );
+      ).catch((err) => console.log(err));;
     }
     setValidated(true);
   };

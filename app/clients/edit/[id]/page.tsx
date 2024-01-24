@@ -20,7 +20,7 @@ const Edit = ({ params }: { params: { id: string } }) => {
       setCity(client.city);
       setPostalCode(client.postalCode);
       setCountry(client.postalCode);
-    });
+    }).catch((err) => console.log(err));;
   }, []);
   const [validated, setValidated] = useState(false);
   const [msg, setMsg] = useState("");
@@ -47,7 +47,7 @@ const Edit = ({ params }: { params: { id: string } }) => {
         } else {
           alert("Error occurred!");
         }
-      });
+      }).catch((err) => console.log(err));;
     }
     setValidated(true);
   };

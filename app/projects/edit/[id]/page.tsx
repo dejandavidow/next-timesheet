@@ -30,14 +30,14 @@ function Page() {
             setarchive(project.archive);
             setstatus(project.status);
             setDecription(project.description);
-          });
+          }).catch((err) => console.log(err));;
         }
       });
       GetClients(1, "", "", 5, session).then((res) => {
         if (res.ok) {
           res.json().then(setClients);
         }
-      });
+      }).catch((err) => console.log(err));;
     }
   }, []);
   function handleSubmit(event: SyntheticEvent) {

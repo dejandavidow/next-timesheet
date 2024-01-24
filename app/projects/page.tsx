@@ -42,7 +42,7 @@ const Projects = () => {
           setActive(pageNumber);
           res.json().then(setProjects);
         }
-      });
+      }).catch((err) => console.log(err));;
     }
   }, [pageNumber, pageSize, search, sortBy, session, added]);
   let items = [];
