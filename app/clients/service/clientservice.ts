@@ -21,6 +21,16 @@ export const GetClients = async (
     },
   });
 };
+export const GetAllClients = async (session: Session) => {
+  let options = {
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${session.user.token}`,
+    },
+    method: "GET",
+  };
+  return await fetch("http://localhost:29468/api/clients/all", options);
+};
 export const GetClient = async (id: number, session: Session) => {
   let res = await fetch(`http://localhost:29468/api/clients/${id}`, {
     headers: {

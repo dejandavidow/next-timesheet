@@ -21,6 +21,16 @@ export const GetProjects = async (
     },
   });
 };
+export const GetAllProjects = async (session: Session) => {
+  let options = {
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${session.user.token}`,
+    },
+    method: "GET",
+  };
+  return await fetch("http://localhost:29468/api/projects/all", options);
+};
 export const GetProject = async (id: number,session:Session) => {
  return await fetch(`http://localhost:29468/api/projects/${id}`,{
     headers: {

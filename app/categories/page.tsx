@@ -26,7 +26,7 @@ import sortimg from "./../../public/sortimg.png";
 import { useSession } from "next-auth/react";
 import { redirect } from "next/navigation";
 function Categories() {
-  const { data: session} = useSession({
+  const { data: session } = useSession({
     required: true,
     onUnauthenticated() {
       redirect("/api/auth/signin?callbackUrl=/categories");
@@ -60,8 +60,8 @@ function Categories() {
   const handleShow = () => setShow(true);
   useEffect(() => {
     if (session?.user)
-      GetCategories(pageNumber, search, sortBy, pageSize, session).then(
-        (res: Response) => {
+      GetCategories(pageNumber, search, sortBy, pageSize, session)
+        .then((res: Response) => {
           if (res.ok) {
             setLoaded(true);
             let paginationData: PaginationModel = JSON.parse(
@@ -73,20 +73,22 @@ function Categories() {
             setActive(pageNumber);
             res.json().then(setCategoires);
           }
-        }
-      ).catch((err) => console.log(err));;
+        })
+        .catch((err) => console.log(err));
     setChanged(false);
-  }, [changed, pageNumber, search, sortBy, pageSize,session]);
+  }, [changed, pageNumber, search, sortBy, pageSize, session]);
   const DeleteCategoryOnClick = (e: any) => {
-    DeleteCategory(e.target.name,session).then((res) => {
-      if (res.ok) {
-        setChanged(true);
-        setMsg("Category deleted successfully!");
-        setShowAlert(true);
-      } else {
-        alert("Error occurrd while deleting!");
-      }
-    }).catch((err) => console.log(err));;
+    DeleteCategory(e.target.name, session)
+      .then((res) => {
+        if (res.ok) {
+          setChanged(true);
+          setMsg("Category deleted successfully!");
+          setShowAlert(true);
+        } else {
+          alert("Error occurrd while deleting!");
+        }
+      })
+      .catch((err) => console.log(err));
   };
   const ResetForm = () => {
     setName("");
@@ -94,11 +96,13 @@ function Categories() {
   };
   const GetCategoryOnClick = (e: any) => {
     let id = e.target.name;
-    GetCategory(id,session).then((category: Category) => {
-      setUpdating(true);
-      setName(category.name);
-      setId(category.id);
-    }).catch((err) => console.log(err));;
+    GetCategory(id, session)
+      .then((category: Category) => {
+        setUpdating(true);
+        setName(category.name);
+        setId(category.id);
+      })
+      .catch((err) => console.log(err));
   };
   const handleCancel = () => {
     ResetForm();
@@ -130,17 +134,19 @@ function Categories() {
     } else {
       event.preventDefault();
       event.stopPropagation();
-      UpdateCategory({ id, name },session).then((res) => {
-        if (res.ok) {
-          setChanged(true);
-          ResetForm();
-          setUpdating(false);
-          setMsg("Category updated successfully!");
-          setShowAlert(true);
-        } else {
-          alert("Error occurred while updating!");
-        }
-      }).catch((err) => console.log(err));
+      UpdateCategory({ id, name }, session)
+        .then((res) => {
+          if (res.ok) {
+            setChanged(true);
+            ResetForm();
+            setUpdating(false);
+            setMsg("Category updated successfully!");
+            setShowAlert(true);
+          } else {
+            alert("Error occurred while updating!");
+          }
+        })
+        .catch((err) => console.log(err));
     }
     setValidated(true);
   };
@@ -152,17 +158,19 @@ function Categories() {
     } else {
       event.preventDefault();
       event.stopPropagation();
-      PostCategory(name,session).then((res) => {
-        if (res.ok) {
-          setAdded(true);
-          setChanged(true);
-          handleClose();
-          setMsg("Category created successfully!");
-          setShowAlert(true);
-        } else {
-          alert("Error occurred while adding!");
-        }
-      }).catch((err) => console.log(err));;
+      PostCategory(name, session)
+        .then((res) => {
+          if (res.ok) {
+            setAdded(true);
+            setChanged(true);
+            handleClose();
+            setMsg("Category created successfully!");
+            setShowAlert(true);
+          } else {
+            alert("Error occurred while adding!");
+          }
+        })
+        .catch((err) => console.log(err));
     }
     setValidated(true);
   };
@@ -334,7 +342,7 @@ function Categories() {
           onSubmit={handleUpdate}
         >
           <Row className="justify-content-center">
-            <Form.Control type="number" value={id} hidden readOnly/>
+            <Form.Control type="number" value={id} hidden readOnly />
             <Col md={3}>
               <Form.Group controlId="validationCustom">
                 <Form.Label>Name</Form.Label>

@@ -20,8 +20,15 @@ export const GetCategories = async (
     },
   });
 };
-export const GetCategory = async (id: number,session:Session) => {
-  let res = await fetch(`http://localhost:29468/api/categories/${id}`,{
+export const GetAllCategories = async (session:Session) => {
+  return await fetch("http://localhost:29468/api/categories/all", {
+    headers: {
+      authorization: `Bearer ${session.user.token}`,
+    },
+  });
+};
+export const GetCategory = async (id: number, session: Session) => {
+  let res = await fetch(`http://localhost:29468/api/categories/${id}`, {
     headers: {
       authorization: `Bearer ${session.user.token}`,
     },
@@ -32,17 +39,23 @@ export const GetCategory = async (id: number,session:Session) => {
     alert("Error occurred");
   }
 };
-export const PostCategory = async (name: string,session:Session) => {
+export const PostCategory = async (name: string, session: Session) => {
   let options = {
-    headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.user.token}`,},
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${session.user.token}`,
+    },
     method: "POST",
     body: JSON.stringify({ name }),
   };
   return await fetch("http://localhost:29468/api/categories", options);
 };
-export const UpdateCategory = async (category: Category,session:Session) => {
+export const UpdateCategory = async (category: Category, session: Session) => {
   let options = {
-    headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.user.token}`},
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${session.user.token}`,
+    },
     method: "PUT",
     body: JSON.stringify(category),
   };
@@ -51,7 +64,7 @@ export const UpdateCategory = async (category: Category,session:Session) => {
     options
   );
 };
-export const DeleteCategory = async (id: number,session:Session) => {
+export const DeleteCategory = async (id: number, session: Session) => {
   let options = {
     headers: {
       "Content-Type": "application/json",
